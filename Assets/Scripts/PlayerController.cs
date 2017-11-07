@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour {
+public class PlayerController : MonoBehaviour{
 
     public Rigidbody playerBody;
     public Camera playerCamera;
@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour {
     private float vertRot = 0.0f; // rotation around the right/x axis
 
 	// Use this for initialization
-	void Start () {
+	void Awake() {
 		
 	}
 	
@@ -28,14 +28,18 @@ public class PlayerController : MonoBehaviour {
 
         playerBody.maxAngularVelocity = 0;
 
+        var jumpPower = 310;
+
         if (Input.GetMouseButtonDown(0))
         {
+                playerBody.constraints = RigidbodyConstraints.None;
+
+
             playerBody.velocity = new Vector3(playerBody.velocity.x, 0, playerBody.velocity.z);
-            playerBody.AddForce(new Vector3(0, 285, 0));
+            playerBody.AddForce(new Vector3(0, jumpPower, 0));
         }
 
-        transform.rotation = Quaternion.Euler(0, 0, 0);
-       
+        transform.rotation = Quaternion.Euler(0, 0, 0);  
 	}
 
     private void HandleLookControl()
@@ -58,5 +62,34 @@ public class PlayerController : MonoBehaviour {
         vertRot = Mathf.Clamp(vertRot, -clampAngle, clampAngle);
         Quaternion localRotation = Quaternion.Euler(vertRot, horzRot, 0.0f);
         playerCamera.transform.localRotation = localRotation;
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+
+        var platform = collision.collider.GetComponent<Platform>();
+
+        if (platform != null)
+        {
+            if (platform.colType == Platform.ColumnType.Rail)
+            {
+                playerBody.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY;
+            }
+        }
+    }
+
+    void OnCollisionExit(Collision collision)
+    {
+        Debug.Log("End collision!");
+
+        var platform = collision.collider.GetComponent<Platform>();
+
+        if (platform != null)
+        {
+            if (platform.colType == Platform.ColumnType.Rail)
+            {
+                playerBody.constraints = RigidbodyConstraints.None;
+            }
+        }
     }
 }
