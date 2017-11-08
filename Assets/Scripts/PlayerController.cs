@@ -71,7 +71,7 @@ public class PlayerController : MonoBehaviour{
 
         if (platform != null)
         {
-            if (platform.colType == Platform.ColumnType.Rail)
+            if (platform.colType == Platform.PlatformType.Rail)
             {
                 playerBody.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY;
             }
@@ -86,7 +86,7 @@ public class PlayerController : MonoBehaviour{
 
         if (platform != null)
         {
-            if (platform.colType == Platform.ColumnType.Rail)
+            if (platform.colType == Platform.PlatformType.Rail)
             {
                 playerBody.constraints = RigidbodyConstraints.None;
             }

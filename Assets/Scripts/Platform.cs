@@ -4,14 +4,14 @@ using UnityEngine;
 
 public class Platform : MonoBehaviour {
 
-    public enum ColumnType
+    public enum PlatformType
     {
         Column,
         Rail
     }
-    public ColumnType colType;
+    public PlatformType colType;
 
-    public enum ColumnColor
+    public enum PlatformColor
     {
         Green,
         Red,
@@ -20,7 +20,7 @@ public class Platform : MonoBehaviour {
         Grey
     }
     [HideInInspector]
-    public ColumnColor colColor;
+    public PlatformColor colColor;
 
     private List<Color> ColumnColors = new List<Color>() 
     {
@@ -49,7 +49,7 @@ public class Platform : MonoBehaviour {
 
     public void setToRandomColor()
     {
-        colColor = (ColumnColor)Random.Range(0, 4);
+        colColor = (PlatformColor)Random.Range(0, 4);
 
         var tempMaterial = new Material(gameObject.GetComponent<MeshRenderer>().sharedMaterial);
         tempMaterial.color = ColumnColors[(int)colColor];
