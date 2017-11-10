@@ -37,27 +37,73 @@ public class LevelGenerator : MonoBehaviour {
         }
 	}
 
-    public class RowDefinition
+    public class ColumnDef
     {
-        public Platform.PlatformType platftormType;
+        public int num;
+        public float spacing;
+        public float heightOffset;
+        public float heightVariance;
+        public float columnChance;
+
+        public ColumnDef(int num, float spacing, float heightOffset, float heightVariance, float columnChance)
+        {
+            this.num = num;
+            this.spacing = spacing;
+            this.heightOffset = heightOffset;
+            this.heightVariance = heightVariance;
+            this.columnChance = columnChance;
+        }
+    }
+
+    public class RailDef
+    {
         public int num;
         public float spacing;
         public float spacingVariance;
         public float heightOffset;
         public float heightVariance;
 
-        public RowDefinition(Platform.PlatformType platformType, int num, float spacing, float spacingVariance, float heightOffset, float heightVariance)
-	    {
-            this.platftormType = platformType;
+        public RailDef(int num, float spacing, float spacingVariance, float heightOffset, float heightVariance)
+        {
             this.num = num;
             this.spacing = spacing;
-            this.spacing = spacingVariance;
+            this.spacingVariance = spacingVariance;
             this.heightOffset = heightOffset;
             this.heightVariance = heightVariance;
-	    }
+        }
     }
 
-    public void GenerateRow(RowDefinition rowDef, float zCalc)
+    public void GenerateRow(ColumnDef rowDef, float zCalc)
+    {
+        bool columnExists = false;
+        for (int index = 0; index < rowDef.num; index++)
+        {
+            float xCalc;
+            float yCalc;
+
+            //Time to handle per row/type generation more elegantly
+            xCalc = rowDef.spacing * (index - rowDef.num / 2.0f) + rowDef.spacing / 2.0f;
+            yCalc = -rowDef.heightOffset + Random.value * rowDef.heightVariance - rowDef.heightVariance / 2.0f;
+
+            var platPos = transform.position + new Vector3(xCalc, yCalc, zCalc);
+
+            var platGO = Instantiate(columnPrefab, platPos, Quaternion.identity);
+            platGO.transform.SetParent(this.transform);
+
+            if (Random.value < rowDef.columnChance & !columnExists)
+            {
+                platGO.transform.localScale = new Vector3(platGO.transform.localScale.x, 1000, platGO.transform.localScale.z);
+                columnExists = true;
+            }
+
+            var plat = platGO.GetComponent<Platform>();
+            plat.setToRandomColor();
+
+            platformList.Add(plat);
+        }
+    }
+
+    public void GenerateRow(RailDef rowDef, float zCalc)
     {
         for (int index = 0; index < rowDef.num; index++)
         {
@@ -70,8 +116,7 @@ public class LevelGenerator : MonoBehaviour {
 
             var platPos = transform.position + new Vector3(xCalc, yCalc, zCalc);
 
-            var prefab = rowDef.platftormType == Platform.PlatformType.Rail ? railPrefab : columnPrefab;
-            var platGO = Instantiate(prefab, platPos, Quaternion.identity);
+            var platGO = Instantiate(railPrefab, platPos, Quaternion.identity);
             platGO.transform.SetParent(this.transform);
 
             var plat = platGO.GetComponent<Platform>();
@@ -106,16 +151,16 @@ public class LevelGenerator : MonoBehaviour {
         for (int rowPlacement = 0; rowPlacement < numRows; rowPlacement++)
         {
             if (rowPlacement % 10 == 0)
-                railToggle = !railToggle;
+               railToggle = !railToggle;
 
             if (railToggle)
             {
-                GenerateRow(new RowDefinition(Platform.PlatformType.Rail, 6, 15, 5, 0, 10), rowSpacing * rowPlacement);
+                GenerateRow(new RailDef(6, 10, 5, 0, 10), rowSpacing * rowPlacement);
             }
             else
             {
                 var colHeightOffset = columnPrefab.transform.localScale.y / 2.0f;
-                GenerateRow(new RowDefinition(Platform.PlatformType.Column, 7, 10, 5, colHeightOffset, 10), rowSpacing * rowPlacement);
+                GenerateRow(new ColumnDef(7, 10, colHeightOffset, 10, .1f), rowSpacing * rowPlacement);
             }
         }
     }
