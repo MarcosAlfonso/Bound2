@@ -12,10 +12,10 @@ public class LevelGenerator : MonoBehaviour {
 
     public List<Platform> platformList = new List<Platform>();
 
+    private int colorIncrementer = 0;
+
 	// Use this for initialization
 	void Awake () {
-        GenerateLevel();
-
         foreach(var transform in GetComponentsInChildren<Transform>())
         {
             if (transform.gameObject != this.gameObject)
@@ -26,6 +26,8 @@ public class LevelGenerator : MonoBehaviour {
                     Destroy(transform.gameObject);
             }
         }
+
+        GenerateLevel();
 	}
 	
 	// Update is called once per frame
@@ -97,9 +99,10 @@ public class LevelGenerator : MonoBehaviour {
             }
 
             var plat = platGO.GetComponent<Platform>();
-            plat.setToRandomColor();
+            plat.initializeColor((Platform.PlatformColor)(colorIncrementer%4));
 
             platformList.Add(plat);
+            colorIncrementer++;
         }
     }
 
@@ -120,9 +123,11 @@ public class LevelGenerator : MonoBehaviour {
             platGO.transform.SetParent(this.transform);
 
             var plat = platGO.GetComponent<Platform>();
-            plat.setToRandomColor();
+            plat.initializeColor((Platform.PlatformColor)(colorIncrementer % 4));
+
 
             platformList.Add(plat);
+            colorIncrementer++;
         }
     }
 
@@ -143,6 +148,8 @@ public class LevelGenerator : MonoBehaviour {
         }
         platformList.Clear();
 
+        colorIncrementer = 0;
+
         //Column Placement
         var numRows = 50;
         var rowSpacing = 20;        
@@ -150,8 +157,10 @@ public class LevelGenerator : MonoBehaviour {
         bool railToggle = false;
         for (int rowPlacement = 0; rowPlacement < numRows; rowPlacement++)
         {
-            if (rowPlacement % 10 == 0)
-               railToggle = !railToggle;
+            if (rowPlacement != 0 && rowPlacement % 5 == 0)
+            {
+                railToggle = !railToggle;
+            }
 
             if (railToggle)
             {
@@ -162,6 +171,7 @@ public class LevelGenerator : MonoBehaviour {
                 var colHeightOffset = columnPrefab.transform.localScale.y / 2.0f;
                 GenerateRow(new ColumnDef(7, 10, colHeightOffset, 10, .1f), rowSpacing * rowPlacement);
             }
+
         }
     }
 }

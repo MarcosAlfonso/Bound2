@@ -17,7 +17,7 @@ public class Platform : MonoBehaviour {
         Red,
         Blue,
         Yellow,
-        Grey
+        Touched
     }
     [HideInInspector]
     public PlatformColor colColor;
@@ -30,10 +30,10 @@ public class Platform : MonoBehaviour {
         new Color(.1f, .6f, .9f),
         //green
         new Color(.05f, .8f, .05f),
-        //orange
+        //yellow
         new Color(1, .6f, 0),
-        //grey (touched)
-        new Color(.4f, .4f, .4f)
+        //touched
+        new Color(0f, 0f, 0f)
     };
 
 	// Use this for initialization
@@ -47,12 +47,21 @@ public class Platform : MonoBehaviour {
 		
 	}
 
-    public void setToRandomColor()
+    public void initializeColor(PlatformColor platColor)
     {
-        colColor = (PlatformColor)Random.Range(0, 4);
+        colColor = platColor;
 
         var tempMaterial = new Material(gameObject.GetComponent<MeshRenderer>().sharedMaterial);
         tempMaterial.color = ColumnColors[(int)colColor];
         gameObject.GetComponent<MeshRenderer>().sharedMaterial = tempMaterial;
     }
+
+    public void burnColor()
+    {
+        colColor = PlatformColor.Touched;
+        gameObject.GetComponent<MeshRenderer>().sharedMaterial.color = ColumnColors[(int)colColor];
+    }
+   
+
+
 }
