@@ -7,6 +7,8 @@ public class PlayerController : MonoBehaviour{
     public Rigidbody playerBody;
     public Camera playerCamera;
 
+    public GameObject projectilePrefab;
+
     //Look Control Vars
     private float mouseSensitivity = 100.0f;
     private float clampAngle = 80.0f;
@@ -14,8 +16,9 @@ public class PlayerController : MonoBehaviour{
     public float vertRot = 0.0f; // rotation around the right/x axis
 
     private float baseMovementSpeed = 12f;
+    private float projectileSpeed = 24f;
     private const int jumpCount = 2;
-    private int jumpPower = 335;
+    private int jumpPower = 340;
 
     private bool isGoing;
 
@@ -74,6 +77,15 @@ public class PlayerController : MonoBehaviour{
                 jumpsRemaining--;
             }
 
+
+            if (Input.GetMouseButtonDown(1))
+            {
+                var proj = Instantiate(projectilePrefab, transform.position + new Vector3(0,.5f,0), Quaternion.identity);
+
+                var xVel = Mathf.Sin(horzRot * Mathf.Deg2Rad);
+                var zVel = Mathf.Cos(horzRot * Mathf.Deg2Rad);
+                proj.GetComponent<Rigidbody>().velocity = new Vector3(xVel * projectileSpeed, 0, zVel * projectileSpeed);
+            }
 
         }
         //Check for fall death
