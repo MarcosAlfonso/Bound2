@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class UIManager : MonoBehaviour {
+public class GameManager : MonoBehaviour {
 
+    public LevelGenerator levelGenerator;
     public TextMeshProUGUI scoreText;
 
-    public static UIManager Instance;
+    public static GameManager Instance;
 
 	// Use this for initialization
 	void Start () {

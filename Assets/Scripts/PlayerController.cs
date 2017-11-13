@@ -62,7 +62,7 @@ public class PlayerController : MonoBehaviour{
 
             if (Input.GetMouseButtonDown(0) && jumpsRemaining > 0)
             {
-                //This clears a potential constraint by a rail or something
+                //This clears a potential constraint by a rail
                 railDirection = 0;
 
                 //Kill player velocity first
@@ -134,7 +134,7 @@ public class PlayerController : MonoBehaviour{
             if (platform.colType == Platform.PlatformType.Rail)
             {
                 //Check which way we're facing to determine rail direction
-                if (horzRot > -90 || horzRot < 90)
+                if (horzRot > -90 && horzRot < 90)
                 {
                     railDirection = 1;
                 }
@@ -146,7 +146,7 @@ public class PlayerController : MonoBehaviour{
                 jumpsRemaining = 2;
                 updateScore(platform.colColor);
                 platform.burnColor();
-                playerBody.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY;
+                
             }
         }
     }
@@ -168,7 +168,7 @@ public class PlayerController : MonoBehaviour{
 
     void Kill()
     {
-        
+        GameManager.Instance.levelGenerator.GenerateLevel();
         transform.position = startPosition;
         playerBody.velocity = Vector3.zero;
         isGoing = false;
@@ -189,6 +189,6 @@ public class PlayerController : MonoBehaviour{
         lastColor = color;
 
         score += combo;
-        UIManager.Instance.UpdateScoreText(score, combo);
+        GameManager.Instance.UpdateScoreText(score, combo);
     }
 }
