@@ -151,7 +151,7 @@ public class LevelGenerator : MonoBehaviour {
         colorIncrementer = 0;
 
         //Column Placement
-        var numRows = 50;
+        var numRows = 100;
         var rowSpacing = 20;        
 
         bool railToggle = false;
