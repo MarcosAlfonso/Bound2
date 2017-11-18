@@ -11,12 +11,12 @@ public class PlayerController : MonoBehaviour{
 
     //Look Control Vars
     private float mouseSensitivity = 100.0f;
-    private float clampAngle = 80.0f;
+    private float clampAngle = 90.0f;
     public float horzRot = 0.0f; // rotation around the up/y axis
     public float vertRot = 0.0f; // rotation around the right/x axis
 
     private float baseMovementSpeed = 12f;
-    private float projectileSpeed = 24f;
+    private float projectileSpeed = 25f;
     private const int jumpCount = 2;
     private int jumpPower = 340;
 
@@ -27,6 +27,8 @@ public class PlayerController : MonoBehaviour{
     private int jumpsRemaining = -1;
 
     private Vector3 startPosition;
+
+    private GameObject projectile;
 
     private int score;
     private int combo;
@@ -78,19 +80,44 @@ public class PlayerController : MonoBehaviour{
             }
 
 
-            if (Input.GetMouseButtonDown(1))
-            {
-                var proj = Instantiate(projectilePrefab, transform.position + new Vector3(0,.5f,0), Quaternion.identity);
-
-                var xVel = Mathf.Sin(horzRot * Mathf.Deg2Rad);
-                var zVel = Mathf.Cos(horzRot * Mathf.Deg2Rad);
-                proj.GetComponent<Rigidbody>().velocity = new Vector3(xVel * projectileSpeed, 0, zVel * projectileSpeed);
-            }
+           
 
         }
         //Check for fall death
         if (transform.position.y < -20f)
             Kill();
+
+        //Right click projectile
+        if (Input.GetMouseButtonDown(1))
+        {
+            if (projectile != null)
+            {
+                transform.position = projectile.transform.position;
+                Destroy(projectile);
+                projectile = null;
+            }
+            else
+            {
+                var vertMod = -vertRot;
+                if (vertMod > 0)
+                {
+                    vertMod *= 2;
+                }
+
+                var xVel = Mathf.Sin(horzRot * Mathf.Deg2Rad);
+                var yVel = Mathf.Sin(vertMod * Mathf.Deg2Rad);
+                var zVel = Mathf.Cos(horzRot * Mathf.Deg2Rad);
+
+
+                var projectileVel = new Vector3(xVel, yVel, zVel);
+
+                projectileVel.Normalize();
+
+                projectile = Instantiate(projectilePrefab, transform.position + projectileVel * 1.5f, Quaternion.identity);                 
+
+                projectile.GetComponent<Rigidbody>().velocity = projectileVel * projectileSpeed;                    
+            }
+        }
 
         transform.rotation = Quaternion.Euler(0, 0, 0);
 	}
@@ -140,6 +167,10 @@ public class PlayerController : MonoBehaviour{
                     updateScore(platform.colColor);
                     platform.burnColor();
                     jumpsRemaining = 2;
+                }
+                else if (jumpsRemaining == 0)
+                {
+                    isGoing = false;
                 }
             }
             //Rail Collision

@@ -4,17 +4,16 @@ using UnityEngine;
 
 public class Projectile : MonoBehaviour {
 
+    public Rigidbody myRigidBody;
+
 	// Use this for initialization
 	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-    void Update()
-    {
-        if (Input.GetMouseButtonDown(1))
-        {
+        myRigidBody = GetComponent<Rigidbody>();
 
-        }
+	}
+
+    void FixedUpdate()
+    {
+        myRigidBody.AddForce(Physics.gravity * myRigidBody.mass);
     }
 }
