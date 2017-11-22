@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class PlayerController : MonoBehaviour{
 
@@ -84,18 +85,20 @@ public class PlayerController : MonoBehaviour{
 
         }
         //Check for fall death
-        if (transform.position.y < -20f)
+        if (transform.position.y < -20f || Input.GetKeyDown(KeyCode.R))
             Kill();
 
         //Right click projectile
         if (Input.GetMouseButtonDown(1))
         {
+            //Projectile exists, teleport to it
             if (projectile != null)
             {
-                transform.position = projectile.transform.position;
+                transform.DOMove(projectile.transform.position + new Vector3(0, .5f, 0), .1f);
                 Destroy(projectile);
                 projectile = null;
             }
+            //spawn projectile
             else
             {
                 var vertMod = -vertRot;
