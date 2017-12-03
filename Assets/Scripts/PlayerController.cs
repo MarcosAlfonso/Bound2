@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour{
     private bool isGoing;
 
     private int railDirection = 0;
+    private Platform attachedRail;
 
     private int jumpsRemaining = -1;
 
@@ -80,12 +81,22 @@ public class PlayerController : MonoBehaviour{
                 jumpsRemaining--;
             }
 
+            if (attachedRail != null)
+            {
+                if (transform.position.z > attachedRail.GetComponent<BoxCollider>().bounds.max.z ||
+                    transform.position.z < attachedRail.GetComponent<BoxCollider>().bounds.min.z)
+                {
+                    attachedRail = null;
+                    railDirection = 0;
+                }
+            }
+
 
            
 
         }
         //Check for fall death
-        if (transform.position.y < -20f || Input.GetKeyDown(KeyCode.R))
+        if (transform.position.y < -10f || Input.GetKeyDown(KeyCode.R))
             Kill();
 
         //Right click projectile
@@ -170,15 +181,14 @@ public class PlayerController : MonoBehaviour{
                     updateScore(platform.colColor);
                     platform.burnColor();
                     jumpsRemaining = 2;
-                }
-                else if (jumpsRemaining == 0)
-                {
-                    isGoing = false;
-                }
+                }                
             }
             //Rail Collision
             if (platform.colType == Platform.PlatformType.Rail)
             {
+
+                attachedRail = platform;
+
                 //Check which way we're facing to determine rail direction
                 if (horzRot > -90 && horzRot < 90)
                 {
@@ -202,14 +212,6 @@ public class PlayerController : MonoBehaviour{
         Debug.Log("End collision!");
 
         var platform = collision.collider.GetComponent<Platform>();
-
-        if (platform != null)
-        {
-            if (platform.colType == Platform.PlatformType.Rail)
-            {
-                railDirection = 0;
-            }
-        }
     }
 
     void Kill()
