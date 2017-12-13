@@ -6,7 +6,9 @@ using TMPro;
 public class GameManager : MonoBehaviour {
 
     public LevelGenerator levelGenerator;
+
     public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI currencyText;
 
     public static GameManager Instance;
 
@@ -23,5 +25,10 @@ public class GameManager : MonoBehaviour {
     public void UpdateScoreText(int score, int combo)
     {
         scoreText.text = "Score: " + score + "\nCombo: " + combo;
+    }
+
+    public void UpdateCurrencyText(int currency)
+    {
+        currencyText.text = "Currency: " + currency + "\nPowerup: Teleball";
     }
 }

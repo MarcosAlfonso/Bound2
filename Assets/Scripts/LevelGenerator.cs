@@ -113,9 +113,9 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
-    public void GenerateMiddleColumn(float zCalc)
+    public void GenerateMiddleColumns(float zCalc)
     {
-        float xVariance = 50;
+        float xVariance = 42;
         float heightOffset = 125;
         float heightVariance = 5;
 
@@ -129,6 +129,31 @@ public class LevelGenerator : MonoBehaviour
         var platPos = transform.position + new Vector3(xCalc, yCalc, zCalc);
 
         var platGO = Instantiate(columnPrefab, platPos, Quaternion.identity);
+        platGO.transform.SetParent(this.transform);
+
+        var plat = platGO.GetComponent<Platform>();
+        plat.initializeColor((Platform.PlatformColor)(colorIncrementer % 4));
+
+        platformList.Add(plat);
+        colorIncrementer++;
+    }
+
+    public void GenerateMiddleRails(float zCalc)
+    {
+        float spacingVariance = 5;
+        float heightOffset = 0;
+        float heightVariance = 11;
+
+        float xCalc;
+        float yCalc;
+
+        //Time to handle per row/type generation more elegantly
+        xCalc = (UnityEngine.Random.value * spacingVariance - spacingVariance / 2.0f);
+        yCalc = -heightOffset + UnityEngine.Random.value * heightVariance - heightVariance / 2.0f;
+
+        var platPos = transform.position + new Vector3(xCalc, yCalc, zCalc);
+
+        var platGO = Instantiate(railPrefab, platPos, Quaternion.identity);
         platGO.transform.SetParent(this.transform);
 
         var plat = platGO.GetComponent<Platform>();
@@ -161,15 +186,17 @@ public class LevelGenerator : MonoBehaviour
 
         prob_generationType = new List<float> 
         {
-            .3f,
-            .3f,
-            12.3f
+            .25f,
+            .25f,
+            .25f,
+            .25f
          };
 
         RowGenerationFuncs = new List<Action<float>>();
         RowGenerationFuncs.Add(GenerateFullColumns);
         RowGenerationFuncs.Add(GenerateFullRails);
-        RowGenerationFuncs.Add(GenerateMiddleColumn);
+        RowGenerationFuncs.Add(GenerateMiddleColumns);
+        RowGenerationFuncs.Add(GenerateMiddleRails);
 
         //Clear out old columns
         foreach (var column in platformList)

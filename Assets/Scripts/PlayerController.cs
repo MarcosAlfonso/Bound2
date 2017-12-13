@@ -34,6 +34,7 @@ public class PlayerController : MonoBehaviour{
 
     private int score;
     private int combo;
+    private int currency;
     private Platform.PlatformColor lastColor = Platform.PlatformColor.Touched;
 
 	// Use this for initialization
@@ -110,7 +111,7 @@ public class PlayerController : MonoBehaviour{
                 projectile = null;
             }
             //spawn projectile
-            else
+            else if (attemptPowerup(1))
             {
                 var vertMod = -vertRot;
                 if (vertMod > 0)
@@ -127,9 +128,9 @@ public class PlayerController : MonoBehaviour{
 
                 projectileVel.Normalize();
 
-                projectile = Instantiate(projectilePrefab, transform.position + projectileVel * 1.5f, Quaternion.identity);                 
+                projectile = Instantiate(projectilePrefab, transform.position + projectileVel * 1.5f, Quaternion.identity);
 
-                projectile.GetComponent<Rigidbody>().velocity = projectileVel * projectileSpeed;                    
+                projectile.GetComponent<Rigidbody>().velocity = projectileVel * projectileSpeed;
             }
         }
 
@@ -221,6 +222,13 @@ public class PlayerController : MonoBehaviour{
         playerBody.velocity = Vector3.zero;
         isGoing = false;
 
+        score = 0;
+        combo = 0;
+        currency = 0;
+
+        GameManager.Instance.UpdateScoreText(score, combo);
+        GameManager.Instance.UpdateCurrencyText(currency);
+
     }
 
     void updateScore(Platform.PlatformColor color)
@@ -228,6 +236,9 @@ public class PlayerController : MonoBehaviour{
         if (color == lastColor)
         {
             combo++;
+
+            if (combo % 5 == 0)
+                currency++;
         }
         else
         {
@@ -238,5 +249,17 @@ public class PlayerController : MonoBehaviour{
 
         score += combo;
         GameManager.Instance.UpdateScoreText(score, combo);
+        GameManager.Instance.UpdateCurrencyText(currency);
+    }
+
+    public bool attemptPowerup(int cost)
+    {
+        if (currency - cost >= 0)
+        {
+            currency -= cost;
+            return true;
+        }
+
+        return false;
     }
 }
