@@ -10,6 +10,8 @@ public class LevelGenerator : MonoBehaviour
     public GameObject columnPrefab;
     public GameObject railPrefab;
 
+    private Transform lastParent;
+
     public bool forceRegen;
 
     public List<Platform> platformList = new List<Platform>();
@@ -19,15 +21,14 @@ public class LevelGenerator : MonoBehaviour
     // Use this for initialization
     void Awake()
     {
-        foreach (var transform in GetComponentsInChildren<Transform>())
+        lastParent = gameObject.transform;
+
+        for (var i = 0; i < gameObject.transform.childCount; i++)
         {
-            if (transform.gameObject != this.gameObject)
-            {
-                if (!Application.isPlaying)
-                    DestroyImmediate(transform.gameObject);
+            if (!Application.isPlaying)
+                    DestroyImmediate(gameObject.transform.GetChild(i).gameObject);
                 else
-                    Destroy(transform.gameObject);
-            }
+                    Destroy(gameObject.transform.GetChild(i).gameObject);
         }
 
         GenerateLevel();
@@ -38,13 +39,21 @@ public class LevelGenerator : MonoBehaviour
     {
         if (forceRegen)
         {
+            for (var i = 0; i < gameObject.transform.GetChildCount(); i++)
+            {
+                if (!Application.isPlaying)
+                    DestroyImmediate(gameObject.transform.GetChild(i).gameObject);
+                else
+                    Destroy(gameObject.transform.GetChild(i).gameObject);
+            }
+
             GenerateLevel();
             forceRegen = false;
         }
     }
 
 
-    public void GenerateFullColumns(float zCalc)
+    public void GenerateFullColumns()
     {
 
         int num = 7;
@@ -54,6 +63,10 @@ public class LevelGenerator : MonoBehaviour
         float columnChance = .1f;
 
         bool columnExists = false;
+
+        var newParent = new GameObject("Full Columns").GetComponent<Transform>();
+        newParent.parent = gameObject.transform;
+
         for (int index = 0; index < num; index++)
         {
             float xCalc;
@@ -63,10 +76,9 @@ public class LevelGenerator : MonoBehaviour
             xCalc = spacing * (index - num / 2.0f) + spacing / 2.0f;
             yCalc = -heightOffset + UnityEngine.Random.value * heightVariance - heightVariance / 2.0f;
 
-            var platPos = transform.position + new Vector3(xCalc, yCalc, zCalc);
+            var platPos = transform.position + new Vector3(xCalc, yCalc, 0);
 
             var platGO = Instantiate(columnPrefab, platPos, Quaternion.identity);
-            platGO.transform.SetParent(this.transform);
 
             if (UnityEngine.Random.value < columnChance & !columnExists)
             {
@@ -79,16 +91,24 @@ public class LevelGenerator : MonoBehaviour
 
             platformList.Add(plat);
             colorIncrementer++;
+
+            platGO.transform.parent = newParent;
         }
+
+        applyNextOffset(newParent);
+
     }
 
-    public void GenerateFullRails(float zCalc)
+    public void GenerateFullRails()
     {
         int num = 6;
         float spacing = 10;
         float spacingVariance = 5;
         float heightOffset = 0;
         float heightVariance = 10;
+
+        var newParent = new GameObject("Full Rails").GetComponent<Transform>();
+        newParent.parent = gameObject.transform;
 
         for (int index = 0; index < num; index++)
         {
@@ -99,10 +119,9 @@ public class LevelGenerator : MonoBehaviour
             xCalc = spacing * (index - num / 2.0f) + spacing / 2.0f + (UnityEngine.Random.value * spacingVariance - spacingVariance / 2.0f);
             yCalc = -heightOffset + UnityEngine.Random.value * heightVariance - heightVariance / 2.0f;
 
-            var platPos = transform.position + new Vector3(xCalc, yCalc, zCalc);
+            var platPos = transform.position + new Vector3(xCalc, yCalc, 0);
 
             var platGO = Instantiate(railPrefab, platPos, Quaternion.identity);
-            platGO.transform.SetParent(this.transform);
 
             var plat = platGO.GetComponent<Platform>();
             plat.initializeColor((Platform.PlatformColor)(colorIncrementer % 4));
@@ -110,10 +129,16 @@ public class LevelGenerator : MonoBehaviour
 
             platformList.Add(plat);
             colorIncrementer++;
+
+            platGO.transform.parent = newParent;
         }
+
+        applyNextOffset(newParent);
+
+
     }
 
-    public void GenerateMiddleColumns(float zCalc)
+    public void GenerateMiddleColumns()
     {
         float xVariance = 42;
         float heightOffset = 125;
@@ -122,11 +147,14 @@ public class LevelGenerator : MonoBehaviour
         float xCalc;
         float yCalc;
 
+        var newParent = new GameObject("Middle Column").GetComponent<Transform>();
+        newParent.parent = gameObject.transform;
+
         //Time to handle per row/type generation more elegantly
         xCalc = UnityEngine.Random.value * xVariance - xVariance / 2.0f;
         yCalc = -heightOffset + UnityEngine.Random.value * heightVariance - heightVariance / 2.0f;
 
-        var platPos = transform.position + new Vector3(xCalc, yCalc, zCalc);
+        var platPos = transform.position + new Vector3(xCalc, yCalc, 0);
 
         var platGO = Instantiate(columnPrefab, platPos, Quaternion.identity);
         platGO.transform.SetParent(this.transform);
@@ -136,9 +164,14 @@ public class LevelGenerator : MonoBehaviour
 
         platformList.Add(plat);
         colorIncrementer++;
+
+        platGO.transform.parent = newParent;
+
+        applyNextOffset(newParent);
+
     }
 
-    public void GenerateMiddleRails(float zCalc)
+    public void GenerateMiddleRails()
     {
         float spacingVariance = 5;
         float heightOffset = 0;
@@ -147,11 +180,14 @@ public class LevelGenerator : MonoBehaviour
         float xCalc;
         float yCalc;
 
+        var newParent = new GameObject("Middle Rail").GetComponent<Transform>();
+        newParent.parent = gameObject.transform;
+
         //Time to handle per row/type generation more elegantly
         xCalc = (UnityEngine.Random.value * spacingVariance - spacingVariance / 2.0f);
         yCalc = -heightOffset + UnityEngine.Random.value * heightVariance - heightVariance / 2.0f;
 
-        var platPos = transform.position + new Vector3(xCalc, yCalc, zCalc);
+        var platPos = transform.position + new Vector3(xCalc, yCalc, 0);
 
         var platGO = Instantiate(railPrefab, platPos, Quaternion.identity);
         platGO.transform.SetParent(this.transform);
@@ -161,6 +197,22 @@ public class LevelGenerator : MonoBehaviour
 
         platformList.Add(plat);
         colorIncrementer++;
+
+        platGO.transform.parent = newParent;
+
+        applyNextOffset(newParent);
+
+    }
+
+    public void applyNextOffset(Transform newParent)
+    {
+        var rotationPerRow = 3;
+        var offsetPerRow = 20;
+
+        newParent.localPosition = lastParent.localPosition;
+        newParent.localRotation = Quaternion.Euler(lastParent.localRotation.eulerAngles + new Vector3(0, rotationPerRow, 0));
+        newParent.transform.Translate(new Vector3(0, 0, offsetPerRow));
+        lastParent = newParent;
     }
 
     //Probability table for the number of rows for each type
@@ -171,10 +223,12 @@ public class LevelGenerator : MonoBehaviour
 
     const int ROW_SPACING = 20;
 
-    public List<Action<float>> RowGenerationFuncs;
+    public List<Action> RowGenerationFuncs;
 
     public void GenerateLevel()
     {
+        lastParent = gameObject.transform;
+
         prob_countPerRowType = new List<float> 
         {
             .05f, //1
@@ -192,7 +246,7 @@ public class LevelGenerator : MonoBehaviour
             .25f
          };
 
-        RowGenerationFuncs = new List<Action<float>>();
+        RowGenerationFuncs = new List<Action>();
         RowGenerationFuncs.Add(GenerateFullColumns);
         RowGenerationFuncs.Add(GenerateFullRails);
         RowGenerationFuncs.Add(GenerateMiddleColumns);
@@ -235,7 +289,7 @@ public class LevelGenerator : MonoBehaviour
 
             }
 
-            RowGenerationFuncs[generationType](ROW_SPACING * rowPlacement);
+            RowGenerationFuncs[generationType]();
 
         }
     }
