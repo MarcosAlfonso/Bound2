@@ -5,6 +5,7 @@ using TMPro;
 
 public class GameManager : MonoBehaviour {
 
+    public PlayerController player;
     public LevelGenerator levelGenerator;
 
     public TextMeshProUGUI scoreText;

@@ -23,8 +23,8 @@ public class PlayerController : MonoBehaviour{
 
     private bool isGoing;
 
-    private int railDirection = 0;
-    private Platform attachedRail;
+    public Vector3? railDirection = null;
+    public Rail attachedRail;
 
     private int jumpsRemaining = -1;
 
@@ -40,7 +40,7 @@ public class PlayerController : MonoBehaviour{
 	// Use this for initialization
 	void Awake() {
         startPosition = transform.position;
-        jumpsRemaining = jumpCount;
+        ResetJumps();
 	}
 	
 	// Update is called once per frame
@@ -49,14 +49,14 @@ public class PlayerController : MonoBehaviour{
 
         if (Input.GetKeyDown(KeyCode.S))
         {
-            jumpsRemaining = jumpCount;
+            ResetJumps();
             isGoing = true;
         }
 
         if (isGoing)
         {
 
-            if (railDirection == 0)
+            if (railDirection == null)
             {
                 var xVel = Mathf.Sin(horzRot * Mathf.Deg2Rad);
                 var zVel = Mathf.Cos(horzRot * Mathf.Deg2Rad);
@@ -64,14 +64,21 @@ public class PlayerController : MonoBehaviour{
             }
             else
             {
-                playerBody.velocity = new Vector3(0, 0, railDirection * baseMovementSpeed);
+                playerBody.velocity = railDirection.Value * baseMovementSpeed;
+
+                if (!attachedRail.attachmentZone.bounds.Contains(transform.position))
+                {
+                    attachedRail = null;
+                    railDirection = null;
+                }
             }
 
 
             if (Input.GetMouseButtonDown(0) && jumpsRemaining > 0)
             {
                 //This clears a potential constraint by a rail
-                railDirection = 0;
+                railDirection = null;
+                attachedRail = null;
 
                 //Kill player velocity first
                 playerBody.velocity = new Vector3(playerBody.velocity.x, 0, playerBody.velocity.z);
@@ -81,18 +88,6 @@ public class PlayerController : MonoBehaviour{
 
                 jumpsRemaining--;
             }
-
-            if (attachedRail != null)
-            {
-                if (transform.position.z > attachedRail.GetComponent<BoxCollider>().bounds.max.z ||
-                    transform.position.z < attachedRail.GetComponent<BoxCollider>().bounds.min.z)
-                {
-                    attachedRail = null;
-                    railDirection = 0;
-                }
-            }
-
-
            
 
         }
@@ -165,56 +160,6 @@ public class PlayerController : MonoBehaviour{
         playerCamera.transform.localRotation = localRotation;
     }
 
-    void OnCollisionEnter(Collision collision)
-    {
-
-        var platform = collision.collider.GetComponent<Platform>();
-
-        if (platform != null)
-        {
-
-            //Column collision
-            if (platform.colType == Platform.PlatformType.Column)
-            {
-                //Collision normal needs to be up/down or it wont refresh jump
-                if (collision.contacts[0].normal == Vector3.up || collision.contacts[0].normal == Vector3.down)
-                {
-                    updateScore(platform.colColor);
-                    platform.burnColor();
-                    jumpsRemaining = 2;
-                }                
-            }
-            //Rail Collision
-            if (platform.colType == Platform.PlatformType.Rail)
-            {
-
-                attachedRail = platform;
-
-                //Check which way we're facing to determine rail direction
-                if (horzRot > -90 && horzRot < 90)
-                {
-                    railDirection = 1;
-                }
-                else
-                {
-                    railDirection = -1;
-                }
-
-                jumpsRemaining = 2;
-                updateScore(platform.colColor);
-                platform.burnColor();
-                
-            }
-        }
-    }
-
-    void OnCollisionExit(Collision collision)
-    {
-        Debug.Log("End collision!");
-
-        var platform = collision.collider.GetComponent<Platform>();
-    }
-
     void Kill()
     {
         GameManager.Instance.levelGenerator.GenerateLevel();
@@ -231,7 +176,7 @@ public class PlayerController : MonoBehaviour{
 
     }
 
-    void updateScore(Platform.PlatformColor color)
+    public void scorePlatform(Platform.PlatformColor color)
     {
         if (color == lastColor)
         {
@@ -250,6 +195,11 @@ public class PlayerController : MonoBehaviour{
         score += combo;
         GameManager.Instance.UpdateScoreText(score, combo);
         GameManager.Instance.UpdateCurrencyText(currency);
+    }
+
+    public void ResetJumps()
+    {
+        jumpsRemaining = jumpCount;
     }
 
     public bool attemptPowerup(int cost)

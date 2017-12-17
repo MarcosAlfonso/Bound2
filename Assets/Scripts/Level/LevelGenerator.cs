@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,45 +15,72 @@ public class LevelGenerator : MonoBehaviour
 
     public bool forceRegen;
 
-    public List<Platform> platformList = new List<Platform>();
+    //Probability table for the number of rows for each type
+    private List<float> prob_repeatRowType;
 
-    private int colorIncrementer = 0;
+    //Probability table for the specific row types
+    private Dictionary<Action, float> generationProbabilityTable;
+
+    private int colorInc;
 
     // Use this for initialization
     void Awake()
     {
         lastParent = gameObject.transform;
 
-        for (var i = 0; i < gameObject.transform.childCount; i++)
-        {
-            if (!Application.isPlaying)
-                    DestroyImmediate(gameObject.transform.GetChild(i).gameObject);
-                else
-                    Destroy(gameObject.transform.GetChild(i).gameObject);
-        }
-
         GenerateLevel();
+    }
+
+    void SetupGeneration()
+    {
+        //Weighted probability for how man identical row types in a row before switching
+        prob_repeatRowType = new List<float> 
+        {
+            .05f, //1
+            .1f,  //2
+            .225f, //3
+            .225f, //4
+            .4f //5
+        };
+
+        //Weighted probability for the various generation algorithms
+        generationProbabilityTable = new Dictionary<Action, float>();
+        generationProbabilityTable.Add(GenerateFullColumns, .25f);
+        generationProbabilityTable.Add(GenerateFullRails, .25f);
+        generationProbabilityTable.Add(GenerateMiddleColumns, .25f);
+        generationProbabilityTable.Add(GenerateMiddleRails, .25f);
     }
 
     // Update is called once per frame
     void Update()
     {
+
         if (forceRegen)
         {
-            for (var i = 0; i < gameObject.transform.GetChildCount(); i++)
-            {
-                if (!Application.isPlaying)
-                    DestroyImmediate(gameObject.transform.GetChild(i).gameObject);
-                else
-                    Destroy(gameObject.transform.GetChild(i).gameObject);
-            }
-
             GenerateLevel();
             forceRegen = false;
         }
     }
 
+    //Used to destroy all the existing platform groups
+    private void DestroyAllChildren()
+    {
+        for (var i = 0; i < gameObject.transform.childCount; i++)
+        {
+            if (!Application.isPlaying)
+                foreach (Transform child in transform)
+                {
+                    DestroyImmediate(child.gameObject);
+                }
+            else
+                foreach (Transform child in transform)
+                {
+                    Destroy(child.gameObject);
+                }
+        }
+    }
 
+    #region Generation Algorithms
     public void GenerateFullColumns()
     {
 
@@ -79,6 +107,7 @@ public class LevelGenerator : MonoBehaviour
             var platPos = transform.position + new Vector3(xCalc, yCalc, 0);
 
             var platGO = Instantiate(columnPrefab, platPos, Quaternion.identity);
+            platGO.transform.parent = newParent;
 
             if (UnityEngine.Random.value < columnChance & !columnExists)
             {
@@ -87,12 +116,8 @@ public class LevelGenerator : MonoBehaviour
             }
 
             var plat = platGO.GetComponent<Platform>();
-            plat.initializeColor((Platform.PlatformColor)(colorIncrementer % 4));
+            plat.initializeColor(getNextColor());
 
-            platformList.Add(plat);
-            colorIncrementer++;
-
-            platGO.transform.parent = newParent;
         }
 
         applyNextOffset(newParent);
@@ -122,15 +147,11 @@ public class LevelGenerator : MonoBehaviour
             var platPos = transform.position + new Vector3(xCalc, yCalc, 0);
 
             var platGO = Instantiate(railPrefab, platPos, Quaternion.identity);
+            platGO.transform.parent = newParent;
 
             var plat = platGO.GetComponent<Platform>();
-            plat.initializeColor((Platform.PlatformColor)(colorIncrementer % 4));
+            plat.initializeColor(getNextColor());
 
-
-            platformList.Add(plat);
-            colorIncrementer++;
-
-            platGO.transform.parent = newParent;
         }
 
         applyNextOffset(newParent);
@@ -157,15 +178,10 @@ public class LevelGenerator : MonoBehaviour
         var platPos = transform.position + new Vector3(xCalc, yCalc, 0);
 
         var platGO = Instantiate(columnPrefab, platPos, Quaternion.identity);
-        platGO.transform.SetParent(this.transform);
+        platGO.transform.parent = newParent;
 
         var plat = platGO.GetComponent<Platform>();
-        plat.initializeColor((Platform.PlatformColor)(colorIncrementer % 4));
-
-        platformList.Add(plat);
-        colorIncrementer++;
-
-        platGO.transform.parent = newParent;
+        plat.initializeColor(getNextColor());
 
         applyNextOffset(newParent);
 
@@ -190,21 +206,26 @@ public class LevelGenerator : MonoBehaviour
         var platPos = transform.position + new Vector3(xCalc, yCalc, 0);
 
         var platGO = Instantiate(railPrefab, platPos, Quaternion.identity);
-        platGO.transform.SetParent(this.transform);
+        platGO.transform.parent = newParent;        
 
         var plat = platGO.GetComponent<Platform>();
-        plat.initializeColor((Platform.PlatformColor)(colorIncrementer % 4));
-
-        platformList.Add(plat);
-        colorIncrementer++;
-
-        platGO.transform.parent = newParent;
+        plat.initializeColor(getNextColor());
 
         applyNextOffset(newParent);
 
     }
+    #endregion
 
-    public void applyNextOffset(Transform newParent)
+
+    //Gets the next color
+    private Platform.PlatformColor getNextColor()
+    {
+        colorInc = colorInc + 1;
+        return (Platform.PlatformColor)(colorInc % (Enum.GetValues(typeof(Platform.PlatformColor)).Length - 1));
+    }
+
+    //Offsets a row
+    private void applyNextOffset(Transform newParent)
     {
         var rotationPerRow = 3;
         var offsetPerRow = 20;
@@ -215,81 +236,37 @@ public class LevelGenerator : MonoBehaviour
         lastParent = newParent;
     }
 
-    //Probability table for the number of rows for each type
-    private List<float> prob_countPerRowType;
-
-    //Probability table for the specific row types
-    private List<float> prob_generationType;
-
-    const int ROW_SPACING = 20;
-
-    public List<Action> RowGenerationFuncs;
-
+    //Generats a level
     public void GenerateLevel()
     {
-        lastParent = gameObject.transform;
+        DestroyAllChildren();
 
-        prob_countPerRowType = new List<float> 
-        {
-            .05f, //1
-            .1f,  //2
-            .225f, //3
-            .225f, //4
-            .4f //5
-        };
+        SetupGeneration();
 
-        prob_generationType = new List<float> 
-        {
-            .25f,
-            .25f,
-            .25f,
-            .25f
-         };
-
-        RowGenerationFuncs = new List<Action>();
-        RowGenerationFuncs.Add(GenerateFullColumns);
-        RowGenerationFuncs.Add(GenerateFullRails);
-        RowGenerationFuncs.Add(GenerateMiddleColumns);
-        RowGenerationFuncs.Add(GenerateMiddleRails);
-
-        //Clear out old columns
-        foreach (var column in platformList)
-        {
-
-            if (column != null)
-            {
-                if (!Application.isPlaying)
-                    DestroyImmediate(column.gameObject);
-                else
-                    Destroy(column.gameObject);
-
-            }
-        }
-        platformList.Clear();
-
-        colorIncrementer = 0;
+        //Reset "last parent" to the level generator so offsetting is reset
+        lastParent = gameObject.transform;       
 
         //Column Placement
         var numRows = 100;
 
-        int tillNextToggle = 4;
+        int tillNextToggle = 0;
         int generationType = 0;
         for (int rowPlacement = 0; rowPlacement < numRows; rowPlacement++)
         {
             --tillNextToggle;
             if (tillNextToggle <= 0)
             {
-                tillNextToggle = RandomFromDistribution.RandomChoiceFollowingDistribution(prob_countPerRowType) + 1;
+                tillNextToggle = RandomFromDistribution.RandomChoiceFollowingDistribution(prob_repeatRowType) + 1;
 
-                var potentialGenType = RandomFromDistribution.RandomChoiceFollowingDistribution(prob_generationType);
+                var potentialGenType = RandomFromDistribution.RandomChoiceFollowingDistribution(generationProbabilityTable.Values.ToList());
                 if (potentialGenType == generationType)
-                    generationType = (generationType + 1) % RowGenerationFuncs.Count;
+                    generationType = (generationType + 1) % generationProbabilityTable.Keys.Count;
                 else
                     generationType = potentialGenType;
 
             }
 
-            RowGenerationFuncs[generationType]();
+            generationProbabilityTable.Keys.ToList()[generationType]();
 
         }
     }

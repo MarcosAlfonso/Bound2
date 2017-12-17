@@ -6,10 +6,10 @@ public class Platform : MonoBehaviour {
 
     public enum PlatformType
     {
+        Null,
         Column,
         Rail
     }
-    public PlatformType colType;
 
     public enum PlatformColor
     {
@@ -46,6 +46,8 @@ public class Platform : MonoBehaviour {
 	void Update () {
 		
 	}
+
+    public virtual PlatformType getPlatformType() { return PlatformType.Null; }
 
     public void initializeColor(PlatformColor platColor)
     {
